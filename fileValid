@@ -1,84 +1,36 @@
-FileUploadApi/
-│
-├── Controllers/
-│   └── FileController.cs
-│       - Handles all HTTP endpoints:
-│           • Upload single file by type
-│           • Upload multiple files by type
-│           • Get files (all or by type)
-│
-├── Services/
-│   ├── IFileService.cs
-│       - Interface for file service
-│           • SaveFileAsync
-│           • SaveMultipleFilesAsync
-│           • GetUploadedFiles
-│
-│   ├── FileService.cs
-│       - Main implementation
-│           • Saves files to folders
-│           • Updates files.json with metadata
-│           • Performs type-specific validation
-│
-│   ├── BestPracticeService.cs  (optional)
-│       - Handles PDF-specific rules
-│
-│   ├── LessonsLearnedService.cs (optional)
-│       - Handles image-specific rules
-│
-│   └── MeetingNotesService.cs (optional)
-│       - Handles text file-specific rules
-│
-├── Models/
-│   ├── FileMetadataDto.cs
-│       - Represents a file: Name, Path, UploadDate, Type
-│
-│   ├── ApiResponse.cs
-│       - Standard API response wrapper: Success, Message, Data
-│
-│   └── ErrorResponse.cs
-│       - Structure for error details
-│
-├── Constants/
-│   └── RouteValue.cs
-│       - Holds route strings for endpoints
-│
-├── UploadedFiles/
-│   ├── BestPractice/         - Stores PDF files
-│   ├── LessonsLearned/       - Stores images (jpg/png)
-│   └── MeetingNotes/         - Stores text files
-│
-├── files.json
-│   - Stores metadata for all uploaded files
-│     Fields: FileName, FilePath, UploadDate, FileType
-│
-├── Program.cs
-│   - Sets up ASP.NET Core app
-│
-└── Startup.cs
-    - Configures services, dependency injectionHow to Test the Output
-Upload a file
-Endpoint: POST /api/file/upload/{fileType}
-Test with:
-PDF for BestPractice
-JPG/PNG for LessonsLearned
-TXT for MeetingNotes
-Expected output:
-File saved in UploadedFiles/{fileType}
-Metadata added in files.json
-Response returns success and file info
-Upload multiple files
-Endpoint: POST /api/file/upload-multiple/{fileType}
-Same rules as above
-Get all files
-Endpoint: GET /api/file/files
-Expected output:
-JSON array of all files with metadata
-Get files by type
-Endpoint: GET /api/file/files?fileType=BestPractice (or LessonsLearned / MeetingNotes)
-Expected output:
-JSON array filtered by the requested type
-Error handling
-Upload wrong file type → API returns failure with error message
-Upload empty file → API returns failure
-Try GET when files.json doesn’t exist → API returns empty array
+Controllers
+   ├── BestPracticeController
+   ├── LessonsLearnedController
+   └── MeetingNotesController
+
+Services
+   ├── Interfaces
+   │     ├── IFileService  ← ONLY ONE
+   │     ├── IBestPracticeService
+   │     ├── ILessonsLearnedService
+   │     └── IMeetingNotesService
+   │
+   ├── Implementations
+   │     ├── FileService ← COMMON (IMPORTANT)
+   │     ├── BestPracticeService
+   │     ├── LessonsLearnedService
+   │     └── MeetingNotesService
+
+Repositories
+   ├── Interfaces
+   │     ├── IBestPracticeRepository
+   │     ├── ILessonsLearnedRepository
+   │     └── IMeetingNotesRepository
+   │
+   ├── Implementations
+   │     ├── BestPracticeRepository
+   │     ├── LessonsLearnedRepository
+   │     └── MeetingNotesRepository
+
+Data
+   └── FileUploadDbContext
+
+Models
+   ├── BestPractice
+   ├── LessonsLearned
+   └── MeetingNotesI am building a File Upload Web API using ASP.NET Core with Entity Framework Core and MySQL (running in Docker). The system contains three modules: BestPractice, LessonsLearned, and MeetingNotes. Each module allows users to upload a file along with additional metadata, and the file is stored in a server folder (wwwroot/UploadedFiles) while only file information such as FileName, FilePath, ContentType, FileSize, and UploadedDate is stored in the database. Each module has its own entity and table in MySQL, but all share a common file handling mechanism. The architecture follows a clean layered approach where Controllers handle HTTP requests, Services contain business logic, a single common FileService handles all file operations (save, delete, validate, and return metadata), Repositories handle database operations using DbContext, and EF Core connects to MySQL. The request flow starts from the client sending a multipart/form-data request to the controller, which calls the service layer, then the FileService stores the file in disk, and finally the service saves metadata into the database through the repository. GET requests retrieve stored metadata, and DELETE requests remove both database records and physical files. The system ensures separation of concerns, reusability, and clean architecture principles with one FileService shared across all modules and independent services and repositories for each entity.
